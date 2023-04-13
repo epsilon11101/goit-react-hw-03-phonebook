@@ -6,6 +6,8 @@ import ContactForm from "../ContactForm/ContactForm";
 import Filter from "../Filter/Filter";
 import ContactList from "../ContactList/ContactList";
 
+import { save, load } from "../../scripts/localStorage";
+
 const DUMMY_CONTACTS = [
   { id: "id-1", name: "Rosie Simpson", number: "459-12-56" },
   { id: "id-2", name: "Hermione Kline", number: "443-89-12" },
@@ -21,9 +23,14 @@ class Form extends Component {
   };
 
   componentDidMount() {
+    let contacts = load("contacts");
+    if (!contacts) {
+      save("contacts", DUMMY_CONTACTS);
+      contacts = load("contacts");
+    }
     this.setState({
-      contacts: DUMMY_CONTACTS,
-      prevContacts: DUMMY_CONTACTS,
+      contacts: contacts,
+      prevContacts: contacts,
     });
   }
 
@@ -39,13 +46,21 @@ class Form extends Component {
       (contact) => contact.id !== selectedContact
     );
 
-    this.setState({
-      contacts: [...newContacts],
-      prevContacts: [...newContacts],
-    });
+    this.setState(
+      {
+        contacts: [...newContacts],
+        prevContacts: [...newContacts],
+      },
+      () => {
+        save("contacts", [...this.state.contacts]);
+        this.delsucess();
+      }
+    );
   };
 
   sucess = () => toast.success("added contact successfully");
+
+  delsucess = () => toast.success("contact removed successfully");
 
   error = () => toast.error("this contacts is the list");
 
@@ -66,6 +81,7 @@ class Form extends Component {
             },
             () => {
               this.setState({ prevContacts: [...this.state.contacts] });
+              save("contacts", [...this.state.contacts]);
             }
           );
           this.sucess();
